@@ -53,7 +53,10 @@ exports['throw an exception'] = ->
 exports['user callback'] = ->
 	mock = mj.mock(new UnderTest())
 	count = 0
-	mj.when(mock).frob(1, 8).thenDo -> count++
+	mj.when(mock).frob(1, 8).thenDo (a, b) ->
+		assert.eql a, 1
+		assert.eql b, 8
+		count++
 	mock.frob 1, 8
 	assert.eql count, 1
 
@@ -82,3 +85,10 @@ exports['mock copies fields'] = ->
 	mock = mj.mock(h)
 	assert.eql mock.foo, h.foo
 	assert.eql mock.bar, h.bar
+
+exports['chained expectations'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.when(mock).frob(1, 7).thenReturn(8).thenReturn(18).thenReturn('no thanks')
+	assert.eql mock.frob(1, 7), 8
+	assert.eql mock.frob(1, 7), 18
+	assert.eql mock.frob(1, 7), 'no thanks'

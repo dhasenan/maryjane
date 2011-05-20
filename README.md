@@ -77,12 +77,14 @@ Here's what you can do with the mock options:
  * `thenDo`: run a callback. See the section on callbacks below.
  * `lax`: don't worry about arguments overmuch. If the caller supplied more arguments than you expected, that's just fine.
 
-You will soon be able to chain these together:
+You can even chain these together:
 
 	when(mock).frob(14)
 		.thenReturn('ya think?')
 		.thenThrow(new Error('Divide by Cucumber Exception'))
 		.thenDo(function() { assert.fail(); });
+
+Note that `lax` applies to the entire method call. If you want one response with lax matching and another with strict matching, you need to do that separately.
 
 Okay, now you know how to set up a result. What about verifying that something has been called?
 

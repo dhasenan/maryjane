@@ -120,42 +120,54 @@ addFieldOrMethod = (mock, type, field) ->
 	else if type.hasOwnProperty field
 		mock[field] = type[field]
 
+class MockOperation
+	constructor: (@retval, @exception, @cb) ->
+
+	execute: (mock, args) ->
+		if @cb?
+			return @cb.apply mock, args
+		else if @exception?
+			throw @exception
+		else
+			return @retval
+
 class MockOptions
 	constructor: (@_mock, @_name, @_args) ->
 		# Use constructor assignment; otherwise the prototype fields
 		# leak and you end up setting all mocks ever to strict rather
 		# than just this one
 		@_strict = true
-		@_returns = null
-		@_ex = null
+		@_ops = []
 		@_count = 0
-		@_userFunc = null
 
 	lax: ->
 		@_strict = false
 		return @
+
 	thenThrow: (ex) ->
-		@_ex = ex
+		@_ops.push new MockOperation(null, ex)
 		return @
+
 	thenReturn: (value) ->
-		@_returns = value
+		@_ops.push new MockOperation(value)
 		return @
+
 	thenDo: (fn) ->
-		@_userFunc = fn
+		@_ops.push new MockOperation(null, null, fn)
 		return @
 
 	execute: (args) ->
+		op = null
+		if @_ops.length == 0
+			# Error?
+			return null
+
+		if @_count > @_ops.length
+			op = @_ops[@_ops.length - 1]
+		else
+			op = @_ops[@_count]
 		@_count++
-		if (@_userFunc != null)
-			#console.log 'calling user func'
-			return @_userFunc(args)
-		if (@_ex != null)
-			#console.log 'throwing exception'
-			throw @_ex
-		if @_returns != null
-			#console.log 'returning %s', @_returns.toString()
-			return @_returns
-		return null
+		op.execute @_mock, args
 
 	matches: (name, args) ->
 		#console.log 'checking %s vs expected %s', args, @_args
