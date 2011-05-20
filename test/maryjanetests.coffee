@@ -21,3 +21,18 @@ exports['return null by default'] = ->
     b = mj.mock(new UnderTest())
     assert.eql b._mockInternals.expectedMethodCalls.length, 0
     assert.isNull b.frob(1, 7)
+
+exports['wrong arguments ignored'] = ->
+    mock = mj.mock(new UnderTest())
+    mj.when(mock).frob(1, 7).thenReturn 15
+    assert.isNull mock.frob(1, 8)
+
+exports['not strict and i didn\'t specify one argument'] = ->
+    mock = mj.mock(new UnderTest())
+    mj.when(mock).frob(1).lax().thenReturn 15
+    assert.eql mock.frob(1, 8), 15
+
+exports['strict and i didn\'t specify one argument'] = ->
+    mock = mj.mock(new UnderTest())
+    mj.when(mock).frob(1).thenReturn 15
+    assert.eql mock.frob(1, 8), null

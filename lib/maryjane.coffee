@@ -21,6 +21,7 @@ class MockInternals
         for key, value of @type
             addIfMethod(@mock, @type, key)
         @expectedMethodCalls = []
+        @unexpectedMethodCalls = []
         @recording = false
 
     checkExpectedCall: (field, args) ->
@@ -32,6 +33,8 @@ class MockInternals
         for call in @expectedMethodCalls
             if call.matches(field, args)
                 return call.execute(field, args)
+        m = new MockOptions(@mock, field, args)
+        @unexpectedMethodCalls.push m
         null
 
     newExpectation: ->
@@ -57,14 +60,14 @@ class MockOptions
         # Use constructor assignment; otherwise the prototype fields
         # leak and you end up setting all mocks ever to strict rather
         # than just this one
-        @_strict = false
+        @_strict = true
         @_returns = null
         @_ex = null
         @_count = 0
         @_userFunc = null
 
-    strict: ->
-        @_strict = true
+    lax: ->
+        @_strict = false
         return @
     thenThrow: (ex) ->
         @_ex = ex
