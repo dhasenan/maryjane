@@ -31,38 +31,34 @@ It will mock its methods and make a shallow copy of its fields. It will *not* ru
 There's not much point in using an object prototype. It's identical to passing the constructor.
 
 To create a mock:
-`require('maryjane');
+	require('maryjane');
 
-var mock1 = mock(new MyObject());
-var mock2 = mock(ObjectWithUntrustedConstructor);
-var mock3 = mock(ObjectWithUntrustedConstructor.prototype);
-`
+	var mock1 = mock(new MyObject());
+	var mock2 = mock(ObjectWithUntrustedConstructor);
+	var mock3 = mock(ObjectWithUntrustedConstructor.prototype);
 
 Using Mocks
 -----------
 MaryJane uses the Arrange-Act-Assert system. Let's say you have a function that takes an apple from a tree and chucks it down a well:
-`
-var iHateApples = function(appleTree, well)
-{
-	var apple = appleTree.pluckApple();
-	well.consume(apple);
-}
-`
+	var iHateApples = function(appleTree, well)
+	{
+		var apple = appleTree.pluckApple();
+		well.consume(apple);
+	}
 
 Let's look at the test:
-`
-// Arrange -- how does the world look and act?
-var appleTree = mock(new AppleTree());
-var well = mock(new Well());
-var apple = new Apple();
-when(appleTree).pluckApple().thenReturn(apple);
+	// Arrange -- how does the world look and act?
+	var appleTree = mock(new AppleTree());
+	var well = mock(new Well());
+	var apple = new Apple();
+	when(appleTree).pluckApple().thenReturn(apple);
 
-// Act: run the test method
-iHateApples(appleTree, well);
+	// Act: run the test method
+	iHateApples(appleTree, well);
 
-// Assert: what happened?
-verify(well).consume(apple);
-`
+	// Assert: what happened?
+	verify(well).consume(apple);
+
 
 
 TODO
