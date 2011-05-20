@@ -63,6 +63,55 @@ Let's look at the test:
 	verify(well).consume(apple);
 
 
+Let's look at that in more depth. We've already looked at creating mock objects, so the first couple lines should make sense. But let's check out the fourth line:
+
+	when(appleTree).pluckApple().thenReturn(apple);
+
+`when` is a MaryJane function that takes a mock object and returns an object ready to arrange a future method call. This object supports the same methods as your original object, but every method will return a method call object on which you can set some options.
+
+Here's what you can do with the mock options:
+ * `thenReturn`: return a particular value.
+ * `thenThrow`: throw a given exception.
+ * `thenDo`: run a callback. See the section on callbacks below.
+ * `lax`: don't worry about arguments overmuch. If the caller supplied more arguments than you expected, that's just fine.
+
+You will soon be able to chain these together:
+
+	when(mock).frob(14)
+		.thenReturn('ya think?')
+		.thenThrow(new Error('Divide by Cucumber Exception'))
+		.thenDo(function() { assert.fail(); });
+
+Okay, now you know how to set up a result. What about verifying that something has been called?
+
+Just use the same process, but with `verify` rather than `when`:
+
+	verify(well).consume(apple);
+
+This will require that someone called `well.consume(apple)` at some point.
+
+Currently, you can't check the number of times this was called. When this is implemented, it will appear as:
+
+	verify(well, never).consume(apple);
+	verify(well, once).consume(apple);
+	verify(well, times(17)).consume(apple);
+	verify(well, atLeast(17)).consume(apple);
+
+Currently, you can't check that a mock had no interactions or no unverified interactions. When this is available, it will appear as:
+
+	verifyNoMoreInteractions(well1, well2);
+	verifyZeroInteractions(well3, well4);
+
+Using Callbacks
+---------------
+When you supply a callback on a method with `thenThrow`, the method you supply stands in for the called method.
+
+Consider:
+
+	var math = mock(new MathHelper());
+	when(math).add(a, b).thenDo(function(a, b) { return a ^ b; });
+
+This will replace the `add` function on `math` with one that returns the bitwise XOR of its operands. All the usual mock object accounting will hold, but the function you supply will be executed.
 
 TODO
 ====
