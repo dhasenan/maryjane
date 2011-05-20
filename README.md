@@ -22,6 +22,7 @@ Usage
 Creating Mocks
 --------------
 MaryJane will create a mock from:
+
  * an existing object
  * an object prototype
  * a constructor
@@ -70,6 +71,7 @@ Let's look at that in more depth. We've already looked at creating mock objects,
 `when` is a MaryJane function that takes a mock object and returns an object ready to arrange a future method call. This object supports the same methods as your original object, but every method will return a method call object on which you can set some options.
 
 Here's what you can do with the mock options:
+
  * `thenReturn`: return a particular value.
  * `thenThrow`: throw a given exception.
  * `thenDo`: run a callback. See the section on callbacks below.
@@ -104,7 +106,7 @@ Currently, you can't check that a mock had no interactions or no unverified inte
 
 Using Callbacks
 ---------------
-When you supply a callback on a method with `thenThrow`, the method you supply stands in for the called method.
+When you supply a callback on a method with `thenDo`, the method you supply stands in for the called method.
 
 Consider:
 
