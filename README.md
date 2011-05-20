@@ -31,6 +31,7 @@ It will mock its methods and make a shallow copy of its fields. It will *not* ru
 There's not much point in using an object prototype. It's identical to passing the constructor.
 
 To create a mock:
+
 	require('maryjane');
 
 	var mock1 = mock(new MyObject());
@@ -40,6 +41,7 @@ To create a mock:
 Using Mocks
 -----------
 MaryJane uses the Arrange-Act-Assert system. Let's say you have a function that takes an apple from a tree and chucks it down a well:
+
 	var iHateApples = function(appleTree, well)
 	{
 		var apple = appleTree.pluckApple();
@@ -47,6 +49,7 @@ MaryJane uses the Arrange-Act-Assert system. Let's say you have a function that 
 	}
 
 Let's look at the test:
+
 	// Arrange -- how does the world look and act?
 	var appleTree = mock(new AppleTree());
 	var well = mock(new Well());
