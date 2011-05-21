@@ -94,12 +94,14 @@ Just use the same process, but with `verify` rather than `when`:
 
 This will require that someone called `well.consume(apple)` at some point.
 
-Currently, you can't check the number of times this was called. When this is implemented, it will appear as:
+You can also verify the number of times something should be called:
 
 	verify(well, never).consume(apple);
 	verify(well, once).consume(apple);
 	verify(well, times(17)).consume(apple);
 	verify(well, atLeast(17)).consume(apple);
+	verify(well, atMost(3)).consume(apple);
+	verify(well, between(3, 7)).consume(apple);
 
 Currently, you can't check that a mock had no interactions or no unverified interactions. When this is available, it will appear as:
 
@@ -119,8 +121,6 @@ This will replace the `add` function on `math` with one that returns the bitwise
 
 TODO
 ====
- * Verify number of times a method was called
  * verifyNoMoreInteractions, verifyZeroInteractions
- * Multiple expectations for methods (throw the first time, return null the second, return this the third time)
  * Ordering
  * Argument matchers

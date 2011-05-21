@@ -68,7 +68,7 @@ exports['verify call'] = ->
 exports['verify call that was not called'] = ->
 	mock = mj.mock(new UnderTest())
 	cb = -> mj.verify(mock).frob 1, 8
-	assert.throws cb, (ex) -> ex.message == 'Expected UnderTest.frob(1, 8) to be called at least once, but it was never called'
+	assert.throws cb, (ex) -> ex.message == 'Expected UnderTest.frob(1, 8) to be called at least 1 times, but it was called 0 times'
 
 exports['mock from base function prototype'] = ->
 	mock = mj.mock(UnderTest.prototype)
@@ -92,3 +92,169 @@ exports['chained expectations'] = ->
 	assert.eql mock.frob(1, 7), 8
 	assert.eql mock.frob(1, 7), 18
 	assert.eql mock.frob(1, 7), 'no thanks'
+
+exports['number of times called'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mj.verify(mock, mj.times(3)).frob(1, 7)
+
+exports['number of times called: never'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.verify(mock, mj.never).frob(1, 7)
+
+exports['number of times called: once'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mj.verify(mock, mj.once).frob(1, 7)
+
+exports['number of times called: twice'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mj.verify(mock, mj.twice).frob(1, 7)
+
+exports['number of times called: thrice'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mj.verify(mock, mj.thrice).frob(1, 7)
+
+exports['number of times called, failure, too few'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.times(3, 3)).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 3 times, but it was called 2 times'
+
+exports['number of times called, failure, too many'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.times(3)).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 3 times, but it was called 4 times'
+
+exports['number of times called: once, failure - too few'] = ->
+	mock = mj.mock(new UnderTest())
+	cb = -> mj.verify(mock, mj.once).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 1 times, but it was called 0 times'
+
+exports['number of times called: twice, failure - too few'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.twice).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 2 times, but it was called 1 times'
+
+exports['number of times called: thrice, failure - too few'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.thrice).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 3 times, but it was called 2 times'
+
+exports['number of times called: never, but actually was called'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.never).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 0 times, but it was called 1 times'
+
+exports['number of times called: once, failure - too many'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.once).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 1 times, but it was called 2 times'
+
+exports['number of times called: twice, failure - too many'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.twice).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 2 times, but it was called 3 times'
+
+exports['number of times called: thrice, failure - too many'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.thrice).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called exactly 3 times, but it was called 4 times'
+
+exports['number of times called, at most'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mj.verify(mock, mj.atMost(6)).frob(1, 7)
+
+exports['number of times called, at most, failure'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.atMost(3)).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called at most 3 times, but it was called 4 times'
+
+exports['number of times called, at least'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mj.verify(mock, mj.atLeast(3)).frob(1, 7)
+
+exports['number of times called, at least, failure'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.atLeast(6)).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called at least 6 times, but it was called 4 times'
+
+exports['number of times called, range'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mj.verify(mock, mj.range(3, 5)).frob(1, 7)
+
+exports['number of times called, range, too high'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.range(6, 19)).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called between 6 and 19 times, but it was called 4 times'
+
+exports['number of times called, range, too low'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verify(mock, mj.range(1, 3)).frob(1, 7)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected UnderTest.frob(1, 7) to be called between 1 and 3 times, but it was called 4 times'

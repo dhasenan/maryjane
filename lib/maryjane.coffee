@@ -1,5 +1,10 @@
 # MaryJane: a mock object library supporting Arrange Act Assert syntax.
 
+# Standard mock methods
+# Create a new mock based on:
+#   - a prototype of an existing object
+#   - an existing object
+#   - a constructor
 exports.mock = (type) ->
 	if !type?
 		throw new Error 'You must provide a type'
@@ -7,6 +12,46 @@ exports.mock = (type) ->
 		new Mock type.prototype
 	else
 		new Mock type
+
+exports.when = (mock) ->
+	onMock mock, (m) -> m._mockInternals.newExpectation()
+
+exports.verify = (mock, times) ->
+	if !times?
+		times = new Range(1, Infinity)
+	onMock mock, (m) -> m._mockInternals.verify(times)
+
+class Range
+	constructor: (@min, @max) ->
+		if !@max?
+			@max = @min
+
+	toString: ->
+		if @min == @max
+			return 'exactly ' + @min + ' times'
+		if @min <= 0
+			if @max == Infinity
+				return 'any number of times'
+			else
+				return 'at most ' + @max + ' times'
+		else
+			if @max == Infinity
+				return 'at least ' + @min + ' times'
+			else
+				return 'between ' + @min + ' and ' + @max + ' times'
+
+	match: (point) -> point <= @max and point >= @min
+
+
+# Repeat functions
+exports.times = (min, max) -> new Range(min, max)
+exports.never = new Range(0, 0)
+exports.once = new Range(1, 1)
+exports.twice = new Range(2, 2)
+exports.thrice = new Range(3, 3)
+exports.atLeast = (min) -> new Range(min, Infinity)
+exports.atMost = (max) -> new Range(0, max)
+exports.range = (min, max) -> new Range(min, max)
 
 onMock = (mock, cb) ->
 	if !(mock instanceof Mock)
@@ -22,19 +67,10 @@ getName = (type) ->
 	f = f.split('(', 2)[0]
 	f.replace ' ', ''
 
-
-exports.when = (mock) ->
-	onMock mock, (m) -> m._mockInternals.newExpectation()
-
-exports.verify = (mock) ->
-	onMock mock, (m) -> m._mockInternals.verify()
-
-
 class MockInternals
 	constructor: (@type, @mock) ->
 		if @type == null or @type == undefined
 			throw new Error 'You must provide a type'
-		#console.log 'working on type %s', @type.constructor.toString()
 		for key, value of @type
 			addFieldOrMethod(@mock, @type, key)
 
@@ -55,20 +91,26 @@ class MockInternals
 		if m?
 			return m.execute args
 
-		m = new MockOptions(@mock, field, args)
-		@unexpectedMethodCalls.push m
+		m = @findCall @unexpectedMethodCalls, field, args
+		if !m?
+			m = new MockOptions(@mock, field, args)
+			@unexpectedMethodCalls.push m
+		m.alreadyRan()
 		null
 
 	check: (field, args) ->
 		@checking = false
 		m = @findCall @expectedMethodCalls, field, args
 		if m?
-			if m.count == 0
-				@failCheck field, args
+			if ! (m instanceof MockOptions)
+				throw new Error 'malformed recorded expectation'
+			if !@range.match m.count()
+				@failCheck field, args, m
 		else
 			m = @findCall @unexpectedMethodCalls, field, args
-			if !m?
-				@failCheck field, args
+			count = if !m? then 0 else m.count()
+			if !@range.match count
+				@failCheck field, args, m
 		null
 
 	record: (field, args) ->
@@ -83,7 +125,8 @@ class MockInternals
 				return call
 		return null
 
-	failCheck: (field, args) ->
+	failCheck: (field, args, match) ->
+		count = if match? then match.count() else 0
 		argString = '('
 		first = true
 		for arg in args
@@ -94,14 +137,15 @@ class MockInternals
 			argString += arg
 		argString += ')'
 
-		throw new Error 'Expected ' + @typeName + '.' + field + argString + ' to be called at least once, but it was never called'
+		throw new Error 'Expected ' + @typeName + '.' + field + argString + ' to be called ' + @range.toString() + ', but it was called ' + count + ' times'
 
 	newExpectation: ->
 		@recording = true
 		@mock
 
-	verify: ->
+	verify: (times) ->
 		@checking = true
+		@range = times
 		@mock
 
 class Mock
@@ -115,7 +159,6 @@ addFieldOrMethod = (mock, type, field) ->
 	if typeof f == 'function'
 		mock[field] = () ->
 			t = mock._mockInternals.checkExpectedCall field, arguments
-			#console.log 'outer wrapper returning %s', t.toString()
 			return t
 	else if type.hasOwnProperty field
 		mock[field] = type[field]
@@ -131,6 +174,7 @@ class MockOperation
 		else
 			return @retval
 
+expectation_count = 0
 class MockOptions
 	constructor: (@_mock, @_name, @_args) ->
 		# Use constructor assignment; otherwise the prototype fields
@@ -139,6 +183,7 @@ class MockOptions
 		@_strict = true
 		@_ops = []
 		@_count = 0
+		@_id = expectation_count++
 
 	lax: ->
 		@_strict = false
@@ -159,7 +204,7 @@ class MockOptions
 	execute: (args) ->
 		op = null
 		if @_ops.length == 0
-			# Error?
+			@_count++
 			return null
 
 		if @_count > @_ops.length
@@ -170,18 +215,18 @@ class MockOptions
 		op.execute @_mock, args
 
 	matches: (name, args) ->
-		#console.log 'checking %s vs expected %s', args, @_args
 		if (@_args != null)
 			if (@_strict and @_args.length != args.length)
-				#console.log 'strict and wrong number of parameters'
 				return false
 			if @_args.length > args.length
-				#console.log 'too few parameters'
 				return false
 			for i in [0 ... @_args.length]
 				unless args[i] == @_args[i]
-					#console.log "argument %d didn't match; expected %s but got %s", i, @_args[i], args[i]
 					return false
-		#console.log 'nothing for it but to match'
 		return true
 
+	alreadyRan: ->
+		@_count++
+
+	count: ->
+		@_count
