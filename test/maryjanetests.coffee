@@ -26,7 +26,6 @@ exports['leave the original type alone'] = ->
 
 exports['return null by default'] = ->
 	b = mj.mock(new UnderTest())
-	assert.eql b._mockInternals.expectedMethodCalls.length, 0
 	assert.isNull b.frob(1, 7)
 
 exports['wrong arguments ignored'] = ->
@@ -258,6 +257,20 @@ exports['number of times called, range, too low'] = ->
 	cb = -> mj.verify(mock, mj.range(1, 3)).frob(1, 7)
 	assert.throws cb, (ex) ->
 		ex.message == 'Expected UnderTest.frob(1, 7) to be called between 1 and 3 times, but it was called 4 times'
+
+exports['verifyNoMoreInteractions'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.verifyNoMoreInteractions(mock)
+
+exports['verifyNoMoreInteractions failure'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verifyNoMoreInteractions(mock)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected:\n\tUnderTest.frob(1, 7) should not be called\nActual:\n\tUnderTest.frob(1, 7) was called 4 times'
 
 exports['verifyZeroInteractions'] = ->
 	mock = mj.mock(new UnderTest())

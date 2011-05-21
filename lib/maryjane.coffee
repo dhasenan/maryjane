@@ -52,8 +52,13 @@ class Range
 # the interactions should be all-or-nothing.
 #
 # It's a pretty stupid use case, but we support it!
-exports.verifyZeroInteractions = (mock) ->
-	onMock mock, (m) -> m._mockInternals.verifyZeroInteractions()
+exports.verifyZeroInteractions = (mocks...) ->
+	for mock in mocks
+		onMock mock, (m) -> m._mockInternals.verifyZeroInteractions()
+
+exports.verifyNoMoreInteractions = (mocks...) ->
+	for mock in mocks
+		onMock mock, (m) -> m._mockInternals.verifyNoMoreInteractions()
 
 # Repeat functions
 exports.times = (min, max) -> new Range(min, max)
@@ -98,8 +103,8 @@ class MockInternals
 		for key, value of @type
 			addFieldOrMethod(@mock, @type, key)
 
-		@expectedMethodCalls = []
-		@unexpectedMethodCalls = []
+		@preparedMethodCalls = []
+		@unpreparedMethodCalls = []
 		@recording = false
 		@checking = false
 		@typeName = getName(@type)
@@ -111,36 +116,39 @@ class MockInternals
 		if @checking
 			return @check field, args
 
-		m = @findCall @expectedMethodCalls, field, args
+		m = @findCall @preparedMethodCalls, field, args
 		if m?
 			return m.execute args
 
-		m = @findCall @unexpectedMethodCalls, field, args
+		m = @findCall @unpreparedMethodCalls, field, args
 		if !m?
 			m = new MockOptions(@mock, field, args)
-			@unexpectedMethodCalls.push m
+			@unpreparedMethodCalls.push m
 		m.alreadyRan()
 		null
 
 	check: (field, args) ->
 		@checking = false
-		m = @findCall @expectedMethodCalls, field, args
+		m = @findCall @preparedMethodCalls, field, args
 		if m?
 			if ! (m instanceof MockOptions)
 				throw new Error 'malformed recorded expectation'
 			if !@range.match m.count()
 				@failCheck field, args, m
+			m.checkedRange @range
 		else
-			m = @findCall @unexpectedMethodCalls, field, args
+			m = @findCall @unpreparedMethodCalls, field, args
 			count = if !m? then 0 else m.count()
 			if !@range.match count
 				@failCheck field, args, m
+			if m?
+				m.checkedRange @range
 		null
 
 	record: (field, args) ->
 		@recording = false
 		m = new MockOptions(@mock, field, args)
-		@expectedMethodCalls.push m
+		@preparedMethodCalls.push m
 		m
 
 	findCall: (list, field, args) ->
@@ -163,19 +171,45 @@ class MockInternals
 		@range = times
 		@mock
 	
+	verifyNoMoreInteractions: ->
+		# First let's run through and see if we have any excessive calls
+		excessive = []
+		for call in @unpreparedMethodCalls
+			if call.verified() and call.inExpectedRange()
+				continue
+			excessive.push call
+		for call in @preparedMethodCalls
+			if call.verified() and call.inExpectedRange()
+				continue
+			excessive.push call
+
+		if excessive.length == 0
+			return
+
+		expected = 'Expected:'
+		actual = 'Actual:'
+		for call in excessive
+			expected += '\n\t'
+			expected += call.expectationDescription()
+			actual += '\n\t'
+			actual += call.callDescription()
+
+		throw new Error expected + '\n' + actual
+
+
 	verifyZeroInteractions: ->
-		if @unexpectedMethodCalls.length == 0 && @expectedMethodCalls.length == 0
+		if @unpreparedMethodCalls.length == 0 && @preparedMethodCalls.length == 0
 			return
 		first = true
 		result = 'Expected no interactions with ' + @typeName + ', but '
 		found = false
-		for a in @unexpectedMethodCalls
+		for a in @unpreparedMethodCalls
 			found = true
 			if !first
 				result += '\n\t'
 			result += a.callDescription()
 			first = false
-		for a in @expectedMethodCalls
+		for a in @preparedMethodCalls
 			if a.count() > 0
 				found = true
 				if !first
@@ -268,5 +302,21 @@ class MockOptions
 	count: ->
 		@_count
 
-	callDescription: ->
-		return formatMethodCall(@_mock._mockInternals.typeName, @_name, @_args) + ' was called ' + @_count + ' times'
+	verified: ->
+		@_verified
+
+	checkedRange: (range) ->
+		@_checkedRange = range
+
+	inExpectedRange: ->
+		@_checkedRange.match @_count
+
+	expectationDescription: ->
+		if @_checkedRange?
+			return @method() + ' should be called ' + @_checkedRange.toString()
+		else
+			return @method() + ' should not be called'
+
+	method: -> formatMethodCall(@_mock._mockInternals.typeName, @_name, @_args)
+
+	callDescription: -> @method() + ' was called ' + @_count + ' times'

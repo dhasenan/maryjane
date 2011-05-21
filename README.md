@@ -103,10 +103,21 @@ You can also verify the number of times something should be called:
 	verify(well, atMost(3)).consume(apple);
 	verify(well, between(3, 7)).consume(apple);
 
-Currently, you can't check that a mock had no interactions or no unverified interactions. When this is available, it will appear as:
+If you want to check that you've covered all the cases, or that a particular mock hasn't been used in this case:
 
 	verifyNoMoreInteractions(well1, well2);
 	verifyZeroInteractions(well3, well4);
+
+Both of these ignore anything you did in the Arrange phase. For example, the following test will pass:
+
+	when(portalGun).firePortal('up').thenReturn('You made a hole in the ceiling');
+	verifyZeroInteractions(portalGun);
+
+This is useful when you have an excessively complicated test, or when you use a common setup method that sets up some return values but this particular method does not make use of them.
+
+Both of these can take multiple mocks:
+
+	verifyZeroInteractions(turret1, turret2, weightedStorageCube);
 
 Using Callbacks
 ---------------
@@ -121,6 +132,5 @@ This will replace the `add` function on `math` with one that returns the bitwise
 
 TODO
 ====
- * verifyNoMoreInteractions, verifyZeroInteractions
  * Ordering
  * Argument matchers
