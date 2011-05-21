@@ -1,20 +1,6 @@
 MaryJane
 ========
-A mock objects library for javascript.
-
-Platform Support
-================
-I don't intend to exclude any platforms, but my development is all on Linux with Node.js. I will accept patches to fix broken functionality in any other environment, if they don't break Node.js.
-
-I might extend platform support in the future, with the next likely target being Jurassic, but this is far from guaranteed.
-
-Despite these warnings about platform support, there shouldn't be anything strange about MaryJane that would prevent you from using it in any reasonably compliant environment.
-
-A Note on Types
-===============
-MaryJane takes a rather strong stance toward types. Specifically, you should deal with types that exist. If you dynamically add methods to your type, this should be accomplished in some global setup.
-
-Regardless, there's almost no way to properly mock an object method that will be assigned during the course of a test. (Implementing that would eliminate any chance of multiplatform support.) So just don't, kay?
+A mock objects library for javascript, inspired heavily by Mockito. It uses the Arrange-Act-Assert pattern.
 
 Usage
 =====
@@ -79,8 +65,8 @@ Here's what you can do with the mock options:
 
 You can even chain these together:
 
-	when(mock).frob(14)
-		.thenReturn('ya think?')
+	when(turret).encounter(weightedCompanionCube)
+		.thenReturn('Who are you?')
 		.thenThrow(new Error('Divide by Cucumber Exception'))
 		.thenDo(function() { assert.fail(); });
 
@@ -90,23 +76,23 @@ Okay, now you know how to set up a result. What about verifying that something h
 
 Just use the same process, but with `verify` rather than `when`:
 
-	verify(well).consume(apple);
+	verify(materialEmancipationGrid).consume(weightedCompanionCube); // NOOOOOOOOOOOO!
 
 This will require that someone called `well.consume(apple)` at some point.
 
 You can also verify the number of times something should be called:
 
-	verify(well, never).consume(apple);
-	verify(well, once).consume(apple);
-	verify(well, times(17)).consume(apple);
-	verify(well, atLeast(17)).consume(apple);
-	verify(well, atMost(3)).consume(apple);
-	verify(well, between(3, 7)).consume(apple);
+	verify(murkyWater, never).consume(weightedCompanionCube);
+	verify(lazor, once).fry(weightedStorageCube); // we also have 'twice' and 'thrice'
+	verify(turret1, times(17)).fallThrough(orangePortal);
+	verify(turret2, atLeast(17)).fallThrough(bluePortal);
+	verify(plasmaBallOfDeath, atMost(3)).bounceOff(wall1);
+	verify(redirectionCube, between(3, 7)).fry(unfortunateTurret);
 
 If you want to check that you've covered all the cases, or that a particular mock hasn't been used in this case:
 
-	verifyNoMoreInteractions(well1, well2);
-	verifyZeroInteractions(well3, well4);
+	verifyNoMoreInteractions(weightedStorageSphere);
+	verifyZeroInteractions(turret3);
 
 Both of these ignore anything you did in the Arrange phase. For example, the following test will pass:
 
@@ -129,6 +115,20 @@ Consider:
 	when(math).add(a, b).thenDo(function(a, b) { return a ^ b; });
 
 This will replace the `add` function on `math` with one that returns the bitwise XOR of its operands. All the usual mock object accounting will hold, but the function you supply will be executed.
+
+A Note on Types
+===============
+MaryJane takes a rather strong stance toward types. Specifically, you should deal with types that exist and are relatively static. If you dynamically add methods to your type, this should be accomplished in some global setup.
+
+Regardless, there's almost no way to properly mock an object method that will be assigned during the course of a test. (I could probably do it, but not in JavaScript; I'd need to write a Node plugin.) So just don't, kay?
+
+Platform Support
+================
+I don't intend to exclude any platforms, but my development is all on Linux with Node.js. I will accept patches to fix broken functionality in any other environment, if they don't break Node.js.
+
+I might extend platform support in the future, with the next likely target being Jurassic, but this is far from guaranteed.
+
+Despite these warnings about platform support, there shouldn't be anything strange about MaryJane that would prevent you from using it in any reasonably compliant environment.
 
 TODO
 ====
