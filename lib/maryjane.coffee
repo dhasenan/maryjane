@@ -42,6 +42,18 @@ class Range
 
 	match: (point) -> point <= @max and point >= @min
 
+# There's a rather interesting situation here worth mentioning.
+# The user might have set up some calls before this:
+# 	when(mock).blah().thenDo blah
+# 	verifyZeroInteractions(mock)
+#
+# This is perfectly sensible. They might have some outrageously
+# horrible or stupid test, maybe with a random element, and
+# the interactions should be all-or-nothing.
+#
+# It's a pretty stupid use case, but we support it!
+exports.verifyZeroInteractions = (mock) ->
+	onMock mock, (m) -> m._mockInternals.verifyZeroInteractions()
 
 # Repeat functions
 exports.times = (min, max) -> new Range(min, max)
@@ -66,6 +78,18 @@ getName = (type) ->
 	f = f.split(' ', 2)[1]
 	f = f.split('(', 2)[0]
 	f.replace ' ', ''
+
+formatMethodCall = (typeName, method, args) ->
+	argString = '('
+	first = true
+	for arg in args
+		if first
+			first = false
+		else
+			argString += ', '
+		argString += arg
+	argString += ')'
+	return typeName + '.' + method + argString
 
 class MockInternals
 	constructor: (@type, @mock) ->
@@ -127,17 +151,8 @@ class MockInternals
 
 	failCheck: (field, args, match) ->
 		count = if match? then match.count() else 0
-		argString = '('
-		first = true
-		for arg in args
-			if first
-				first = false
-			else
-				argString += ', '
-			argString += arg
-		argString += ')'
-
-		throw new Error 'Expected ' + @typeName + '.' + field + argString + ' to be called ' + @range.toString() + ', but it was called ' + count + ' times'
+		method = formatMethodCall @typeName, field, args
+		throw new Error 'Expected ' + method + ' to be called ' + @range.toString() + ', but it was called ' + count + ' times'
 
 	newExpectation: ->
 		@recording = true
@@ -147,6 +162,28 @@ class MockInternals
 		@checking = true
 		@range = times
 		@mock
+	
+	verifyZeroInteractions: ->
+		if @unexpectedMethodCalls.length == 0 && @expectedMethodCalls.length == 0
+			return
+		first = true
+		result = 'Expected no interactions with ' + @typeName + ', but '
+		found = false
+		for a in @unexpectedMethodCalls
+			found = true
+			if !first
+				result += '\n\t'
+			result += a.callDescription()
+			first = false
+		for a in @expectedMethodCalls
+			if a.count() > 0
+				found = true
+				if !first
+					result += '\n\t'
+				result += a.callDescription()
+				first = false
+		if found
+			throw new Error result
 
 class Mock
 	constructor: (type) ->
@@ -230,3 +267,6 @@ class MockOptions
 
 	count: ->
 		@_count
+
+	callDescription: ->
+		return formatMethodCall(@_mock._mockInternals.typeName, @_name, @_args) + ' was called ' + @_count + ' times'

@@ -258,3 +258,22 @@ exports['number of times called, range, too low'] = ->
 	cb = -> mj.verify(mock, mj.range(1, 3)).frob(1, 7)
 	assert.throws cb, (ex) ->
 		ex.message == 'Expected UnderTest.frob(1, 7) to be called between 1 and 3 times, but it was called 4 times'
+
+exports['verifyZeroInteractions'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.verifyZeroInteractions(mock)
+
+exports['verifyZeroInteractions with setup'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.when(mock).frob(1, 7).thenReturn 4
+	mj.verifyZeroInteractions(mock)
+
+exports['verifyZeroInteractions failure'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	mock.frob(1, 7)
+	cb = -> mj.verifyZeroInteractions(mock)
+	assert.throws cb, (ex) ->
+		ex.message == 'Expected no interactions with UnderTest, but UnderTest.frob(1, 7) was called 4 times'
