@@ -1,0 +1,11 @@
+{
+	"name": "MaryJane",
+	"version": 0.1,
+	"description": "Mock objects with AAA styling, inspired by Mockito",
+	"author": "Christopher Wright <dhasenan@gmail.com>",
+	"repository": "git://github.com/dhasenan/maryjane",
+	"licenses": [{"type": "MIT", "url": "http://localhost/"}],
+	"directories": { "lib": "./lib" },
+	"homepage": "https://github.com/dhasenan/maryjane"
+}
+
