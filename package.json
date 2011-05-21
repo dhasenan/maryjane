@@ -1,6 +1,6 @@
 {
-	"name": "MaryJane",
-	"version": 0.1,
+	"name": "maryjane",
+	"version": "0.1.0",
 	"description": "Mock objects with AAA styling, inspired by Mockito",
 	"author": "Christopher Wright <dhasenan@gmail.com>",
 	"repository": "git://github.com/dhasenan/maryjane",
