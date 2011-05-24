@@ -290,3 +290,33 @@ exports['verifyZeroInteractions failure'] = ->
 	cb = -> mj.verifyZeroInteractions(mock)
 	assert.throws cb, (ex) ->
 		ex.message == 'Expected no interactions with UnderTest, but UnderTest.frob(1, 7) was called 4 times'
+
+exports['matchers by position and failed non-matcher arg match'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.when(mock).frob(1, mj.match((x) -> x % 6 == 1)).thenReturn(187)
+	assert.eql mock.frob(2, 7), null
+
+exports['matchers by position and failed matcher match'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.when(mock).frob(1, mj.match((x) -> x % 6 == 1)).thenReturn(187)
+	assert.eql mock.frob(1, 8), null
+
+exports['matchers by position'] = ->
+	mock = mj.mock(new UnderTest())
+	mj.when(mock).frob(mj.match((x) -> x == 1), mj.match((x) -> x % 6 == 1)).thenReturn(187)
+	assert.eql mock.frob(1, 7), 187
+
+exports['verify by matcher'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 7)
+	mj.verify(mock).frob((mj.match((x) -> x == 1)), 7)
+
+exports['verify by matcher but does not match'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(2, 7)
+	assert.throws -> mj.verify(mock).frob((mj.match((x) -> x == 1)), 7)
+
+exports['verify by matcher but non-matcher arg does not match'] = ->
+	mock = mj.mock(new UnderTest())
+	mock.frob(1, 8)
+	assert.throws -> mj.verify(mock).frob((mj.match((x) -> x == 1)), 7)

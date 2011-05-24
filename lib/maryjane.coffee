@@ -70,6 +70,11 @@ exports.atLeast = (min) -> new Range(min, Infinity)
 exports.atMost = (max) -> new Range(0, max)
 exports.range = (min, max) -> new Range(min, max)
 
+class Matcher
+	constructor: (@matcher) ->
+
+exports.match = (fn) -> new Matcher fn
+
 onMock = (mock, cb) ->
 	if !(mock instanceof Mock)
 		throw new Error 'You can only use this with mock objects'
@@ -255,6 +260,7 @@ class MockOptions
 		@_ops = []
 		@_count = 0
 		@_id = expectation_count++
+		@_matchers = []
 
 	lax: ->
 		@_strict = false
@@ -292,9 +298,29 @@ class MockOptions
 			if @_args.length > args.length
 				return false
 			for i in [0 ... @_args.length]
-				unless args[i] == @_args[i]
+				if args[i] instanceof Matcher
+					if !args[i].matcher(@_args[i])
+						return false
+				else if @_args[i] instanceof Matcher
+					if !@_args[i].matcher(args[i])
+						return false
+				else if args[i] != @_args[i]
 					return false
 		return true
+
+	where: (matchers...) ->
+		if typeof matchers[0] == 'number' or matchers[0] instanceof Number
+			if matchers.length != 2
+				throw new Error 'When supplying matchers by index, you must give exactly two arguments, the first of which should be a numeric index, the second of which should be a function'
+			if @_matchers[matchers[0]]?
+				throw new Error 'Matcher for argument ' + matchers[0] + ' specified more than once'
+			@_matchers[matchers[0]] = matchers[1]
+		else
+			for m, i in matchers
+				if typeof m != 'function'
+					throw new Error 'MockOptions.where: parameter ' + i + ' is of type ' + (typeof m) + ', but it should be a function'
+				@_matchers.push m
+		@
 
 	alreadyRan: ->
 		@_count++

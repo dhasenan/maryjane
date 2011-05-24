@@ -72,6 +72,14 @@ You can even chain these together:
 
 Note that `lax` applies to the entire method call. If you want one response with lax matching and another with strict matching, you need to do that separately.
 
+With MaryJane, you can also specify a predicate rather than an exact argument to match:
+
+	when(turret).shootAll(match(function(x) { return x.canBeShot(); }), 
+						  match(function(y) { return y.containsPortal(); }))
+		.thenReturn(foo);
+
+Every time the `turret.shootAll` method is called, the functions can be evaluated. There is no guarantee as to the order.
+
 Okay, now you know how to set up a result. What about verifying that something has been called?
 
 Just use the same process, but with `verify` rather than `when`:
@@ -88,6 +96,14 @@ You can also verify the number of times something should be called:
 	verify(turret2, atLeast(17)).fallThrough(bluePortal);
 	verify(plasmaBallOfDeath, atMost(3)).bounceOff(wall1);
 	verify(redirectionCube, between(3, 7)).fry(unfortunateTurret);
+
+You can also use a callback to match arguments, just like in the Arrange phase:
+
+	verify(lazor).fry(match(function(x) { return x.name == 'Chell'; }));
+
+And you can do that with some arguments and not others:
+
+	verify(turret).shootAll(match(function(x) { return x.name == 'Chell'; }), wall1);
 
 If you want to check that you've covered all the cases, or that a particular mock hasn't been used in this case:
 
@@ -133,4 +149,3 @@ Despite these warnings about platform support, there shouldn't be anything stran
 TODO
 ====
  * Ordering
- * Argument matchers
