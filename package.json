@@ -6,6 +6,7 @@
 	"repository": "git://github.com/dhasenan/maryjane",
 	"licenses": [{"type": "MIT", "url": "https://github.com/dhasenan/maryjane/raw/master/LICENSE"}],
 	"directories": { "lib": "./lib" },
+	"main": "./lib/maryjane.coffee",
 	"homepage": "https://github.com/dhasenan/maryjane",
 	"dependencies": { "coffee-script": "*" },
 	"devDependencies": { "expresso": "*" }
