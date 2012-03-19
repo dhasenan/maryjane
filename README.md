@@ -13,7 +13,7 @@ MaryJane will create a mock from:
  * an object prototype
  * a constructor
 
-It will mock its methods and make a shallow copy of its fields. It will *not* run the constructor, even if you pass a constructor or a prototype. Since JavaScript objects typically get instance fields from the constructor, it's recommended that you pass in a newly constructed instance, such as: `MaryJane.mock(new ClassUnderTest())`. (This usage will call a constructor, but it isn't Mary Jane doing so.)
+It will mock its methods and make a shallow copy of its fields. It will *not* run the constructor, even if you pass a constructor or a prototype. Since JavaScript objects typically get instance fields from the constructor, it's recommended that you pass in a newly constructed instance, such as: `MaryJane.mock(new ClassUnderTest())`. (This usage will call a constructor, but it isn't MaryJane doing so.)
 
 There's not much point in using an object prototype. It's identical to passing the constructor.
 

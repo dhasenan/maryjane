@@ -9,6 +9,5 @@
 	"main": "./lib/maryjane.coffee",
 	"homepage": "https://github.com/dhasenan/maryjane",
 	"dependencies": { "coffee-script": "*" },
-	"devDependencies": { "expresso": "*" }
 }
 
